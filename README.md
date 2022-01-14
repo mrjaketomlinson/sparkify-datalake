@@ -11,7 +11,9 @@ AWS_ACCESS_KEY_ID=YourAccessKey
 AWS_SECRET_ACCESS_KEY=YourSecretKey
 ```
 3. In etl.py, modify the output_data variable in the main function to the S3 bucket you'd like to export the data to.
-4. Run etl.py. This will process that data listed below and add that data to the S3 bucket you specified.
+4. Create and SSH into AWS EMR Cluster.
+5. Add etl.py and dl.cfg to hadoop directory.
+6. Run etl.py (`spark-submit etl.py`). This will process that data listed below and add that data to the S3 bucket you specified.
 
 ## Data in this project:
 - **song_data** -- A subset of the [Million Song Dataset](http://millionsongdataset.com). Each file contains metadata about a song and the artist of that song.
