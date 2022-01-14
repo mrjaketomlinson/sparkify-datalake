@@ -11,8 +11,8 @@ from pyspark.sql.functions import year, month, dayofmonth, hour, weekofyear, dat
 config = configparser.ConfigParser()
 config.read('dl.cfg')
 
-os.environ['AWS_ACCESS_KEY_ID']=config['AWS_ACCESS_KEY_ID']
-os.environ['AWS_SECRET_ACCESS_KEY']=config['AWS_SECRET_ACCESS_KEY']
+os.environ['AWS_ACCESS_KEY_ID'] = config['AWS']['AWS_ACCESS_KEY_ID']
+os.environ['AWS_SECRET_ACCESS_KEY'] = config['AWS']['AWS_SECRET_ACCESS_KEY']
 
 
 def create_spark_session():
@@ -36,7 +36,7 @@ def process_song_data(spark, input_data, output_data):
     :output_data: String of the S3 bucket path to output the tables.
     """
     # get filepath to song data file
-    song_data = f'{input_data}song_data/'
+    song_data = f'{input_data}song_data/*/*/*/*.json'
     
     # read song data file
     df = spark.read.json(song_data)
@@ -64,7 +64,7 @@ def process_log_data(spark, input_data, output_data):
     :output_data: String of the S3 bucket path to output the tables.
     """
     # get filepath to log data file
-    log_data = f'{input_data}log_data/'
+    log_data = f'{input_data}log_data/*/*/*.json'
 
     # read log data file
     df = spark.read.json(log_data)
@@ -104,17 +104,19 @@ def process_log_data(spark, input_data, output_data):
     song_df = spark.read.parquet(f'{output_data}songs_table.parquet')
 
     # extract columns from joined song and log datasets to create songplays table 
-    songplays_table = log_df.join(song_df, log_df.song == song_df.title, 'left') \
+    songplays_table = df.join(song_df, df.song == song_df.title, 'left') \
                             .select(
-                                row_number().over(Window.partitionBy().orderBy([log_df.datetime])).alias('songplay_id'), 
-                                log_df.datetime.alias('start_time'),
-                                log_df.userId.alias('user_id'),
-                                log_df.level,
+                                row_number().over(Window.partitionBy().orderBy([df.datetime])).alias('songplay_id'), 
+                                df.datetime.alias('start_time'),
+                                df.userId.alias('user_id'),
+                                df.level,
                                 song_df.song_id,
                                 song_df.artist_id,
-                                log_df.sessionId.alias('session_id'),
-                                log_df.location,
-                                log_df.userAgent.alias('user_agent')
+                                df.sessionId.alias('session_id'),
+                                df.location,
+                                df.userAgent.alias('user_agent'),
+                                year(df.datetime).alias('year'),
+                                month(df.datetime).alias('month')
                             )
 
     # write songplays table to parquet files partitioned by year and month
